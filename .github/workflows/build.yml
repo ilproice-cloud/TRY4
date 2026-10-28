@@ -22,8 +22,8 @@ jobs:
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
-      working-directory: realmforge
+      working-directory: RealmForgeVer2-Editable.zip
 
     - name: Build with Gradle
       run: ./gradlew build
-      working-directory: realmforge
+      working-directory: RealmForgeVer2-Editable.zip
