@@ -1,29 +1,46 @@
+
 name: Create Build
 
 on:
+  workflow_dispatch:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-      working-directory: RealmForgeVer2-Editable.zip
+      - name: Extract Project ZIP
+        run: |
+          mkdir -p extracted
+          unzip -o RealmForgeVer2-Editable.zip -d extracted
+          find extracted -name gradlew -type f
 
-    - name: Build with Gradle
-      run: ./gradlew build
-      working-directory: RealmForgeVer2-Editable.zip
+      - name: Build Mod
+        run: |
+          PROJECT_DIR=$(dirname "$(find extracted -name gradlew -type f | head -n 1)")
+          if [ -z "$PROJECT_DIR" ] || [ ! -f "$PROJECT_DIR/build.gradle" ] && [ ! -f "$PROJECT_DIR/build.gradle.kts" ]; then
+            echo "Could not find the Gradle project inside the ZIP."
+            exit 1
+          fi
+          cd "$PROJECT_DIR"
+          chmod +x gradlew
+          ./gradlew build
+
+      - name: Upload Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: RealmForgeVer2
+          path: extracted/**/build/libs/*.jar
